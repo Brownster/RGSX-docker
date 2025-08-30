@@ -1,0 +1,74 @@
+name: Manual Release and Tag
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version (e.g., 0.0.1)"
+        required: true
+        type: string
+      prerelease:
+        description: "Mark release as prerelease"
+        required: false
+        default: false
+        type: boolean
+      notes:
+        description: "Release notes (optional)"
+        required: false
+        type: string
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate version input
+        id: v
+        run: |
+          VER="${{ inputs.version }}"
+          if ! printf "%s" "$VER" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)?$'; then
+            echo "Invalid version format: $VER (expected X.Y.Z or X.Y.Z.W)" >&2
+            exit 1
+          fi
+          echo "version=$VER" >> "$GITHUB_OUTPUT"
+          echo "tag_v=v$VER" >> "$GITHUB_OUTPUT"
+
+      - name: Configure git user
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Create and push tag (v-prefixed only)
+        run: |
+          TAGV="${{ steps.v.outputs.tag_v }}"
+          set -e
+          if git rev-parse "$TAGV" >/dev/null 2>&1; then
+            echo "Tag $TAGV already exists" >&2
+          else
+            git tag -a "$TAGV" -m "Release ${TAGV}"
+          fi
+          git push origin "$TAGV"
+
+      - name: Create GitHub Release (v-prefixed)
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.v.outputs.tag_v }}
+          name: RGSX ${{ steps.v.outputs.version }}
+          body: ${{ inputs.notes }}
+          draft: false
+          prerelease: ${{ inputs.prerelease }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Note
+        run: |
+          echo "Created tag ${{ steps.v.outputs.tag_v }}."
+          echo "Pushing this tag triggers the Docker multi-arch workflow to publish GHCR images."

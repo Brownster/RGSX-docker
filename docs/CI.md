@@ -32,6 +32,16 @@ Usage
   - GHCR: `docker pull ghcr.io/<owner>/<repo>:v1.2.3`
   - Docker Hub (if enabled): `docker pull myuser/rgsx:v1.2.3`
 
+Manual release (single tag + release)
+- Workflow: `.github/workflows/manual-release.yml`
+- In GitHub → Actions → "Manual Release and Tag" → Run workflow
+  - Set `version` (e.g., `0.0.1`)
+  - Optionally set `prerelease` and notes
+  - The workflow:
+    - Creates a single tag: `v0.0.1`
+    - Creates a GitHub Release for `v0.0.1`
+    - Pushing `v0.0.1` triggers the Docker multi-arch workflow to publish GHCR images
+
 Notes
 - The same image supports both GUI and Web modes via `RGSX_MODE` env (`gui` or `web`).
 - Consider pinning exact tags (e.g., `v1.2.3`) in production instead of `latest`.
