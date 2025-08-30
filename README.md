@@ -64,6 +64,74 @@ You will find RGSX in the "PORTS" system or "Homebrew and ports" and in `/roms/p
 - Update the game list via the menu:  
   `Game Settings > Update list`.
 
+---
+
+## 🐳 Docker Support
+
+This project includes support for running RGSX in a Docker container. This is useful for users who want to run the application in an isolated environment, or who want to host the web UI on a server.
+
+### Building the Docker Image
+
+To build the Docker image, run the following command in the root of the project:
+
+```bash
+docker build -t rgsx .
+```
+
+### Running with Docker Compose
+
+The easiest way to run the application with Docker is to use Docker Compose. A `docker-compose.yml` file is provided for this purpose.
+
+1.  **Configure the volumes:** Open the `docker-compose.yml` file and edit the `volumes` section to map your local ROMs and saves directories to the container's `/roms` and `/saves` directories.
+
+    ```yaml
+    volumes:
+      # Point these to your NAS paths
+      - /path/to/your/roms:/roms
+      - /path/to/your/saves:/saves
+    ```
+
+2.  **Start the container:** Run the following command to start the container in the background:
+
+    ```bash
+    docker-compose up -d
+    ```
+
+The web UI will be available at `http://<your-docker-host>:8080`.
+
+### Environment Variables
+
+The following environment variables can be used to configure the Docker container:
+
+| Variable              | Description                               | Default |
+| --------------------- | ----------------------------------------- | ------- |
+| `TZ`                  | Timezone for the container                | `UTC`   |
+| `RGSX_MODE`           | Set to `web` to enable the web UI         | `web`   |
+| `WEB_PORT`            | Port for the web UI                       | `8080`  |
+| `RGSX_DISABLE_UPDATER`| Disable automatic updates                 | `1`     |
+| `PUID`                | User ID to run the application as         | `1000`  |
+| `PGID`                | Group ID to run the application as        | `1000`  |
+
+---
+
+## 🌐 Web UI
+
+RGSX now includes a web-based user interface that allows you to manage your retro game collection from a web browser.
+
+### Features
+
+-   **Browse platforms and games:** View your entire collection of platforms and games.
+-   **Download games:** Start and monitor game downloads directly from the web UI.
+-   **View download history:** See a list of all your downloaded games.
+-   **Search:** Quickly find games across all your platforms.
+-   **1Fichier API Key:** Configure your 1Fichier API key.
+
+### Accessing the Web UI
+
+When running RGSX with Docker, the web UI is enabled by default. You can access it at:
+
+`http://<your-docker-host>:8080`
+
 
 ## 🏁 First startup
 ---
