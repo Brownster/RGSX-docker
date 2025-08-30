@@ -6,6 +6,7 @@ import logging
 from typing import Optional
 import shutil
 from urllib.parse import unquote
+from datetime import datetime
 
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect, Query, Request, Depends, Header
 from fastapi.middleware.cors import CORSMiddleware
@@ -658,4 +659,85 @@ def set_onefichier_key(payload: OnefichierUpdate):
             f.write(key)
         return {"ok": True, "present": bool(key)}
     except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# Data updates: force refresh of platforms/games from upstream
+@app.post("/api/update/data", dependencies=[Depends(dep_auth), Depends(dep_rate_limit)])
+def update_game_data():
+    """Manually update platform and game data from upstream rgsx-data.zip."""
+    try:
+        logger.info("Manual data update requested")
+        
+        # Download latest rgsx-data.zip
+        resp = requests.get(cfg.OTA_data_ZIP, timeout=60, stream=True)
+        resp.raise_for_status()
+        
+        # Extract to saves folder (overwrites existing data)
+        with ZipFile(BytesIO(resp.content)) as zf:
+            zf.extractall(cfg.SAVE_FOLDER)
+        
+        logger.info("Manual data update completed successfully")
+        
+        # Clear any cached data
+        if hasattr(cfg, 'platform_dicts'):
+            cfg.platform_dicts = None
+            
+        return {
+            "ok": True, 
+            "message": "Platform and game data updated successfully",
+            "timestamp": datetime.now().isoformat()
+        }
+        
+    except requests.RequestException as e:
+        logger.error(f"Failed to download data update: {e}")
+        raise HTTPException(status_code=502, detail=f"Failed to download update: {str(e)}")
+    except Exception as e:
+        logger.error(f"Failed to update data: {e}")
+        raise HTTPException(status_code=500, detail=f"Update failed: {str(e)}")
+
+
+@app.get("/api/update/status", dependencies=[Depends(dep_auth), Depends(dep_rate_limit)])
+def update_status():
+    """Get information about current data version and update availability."""
+    try:
+        # Check when data was last updated
+        sources_file = cfg.SOURCES_FILE
+        games_dir = cfg.GAMES_FOLDER
+        
+        last_updated = None
+        if os.path.exists(sources_file):
+            last_updated = datetime.fromtimestamp(os.path.getmtime(sources_file)).isoformat()
+            
+        platform_count = 0
+        game_count = 0
+        
+        if os.path.exists(games_dir):
+            platform_count = len([f for f in os.listdir(games_dir) if f.endswith('.json')])
+            
+            # Count total games across all platforms
+            for filename in os.listdir(games_dir):
+                if filename.endswith('.json'):
+                    try:
+                        with open(os.path.join(games_dir, filename), 'r', encoding='utf-8') as f:
+                            data = json.load(f)
+                            if isinstance(data, list):
+                                game_count += len(data)
+                            elif isinstance(data, dict):
+                                if 'games' in data and isinstance(data['games'], list):
+                                    game_count += len(data['games'])
+                    except:
+                        continue
+        
+        return {
+            "last_updated": last_updated,
+            "platforms": platform_count,
+            "games": game_count,
+            "sources_file_exists": os.path.exists(sources_file),
+            "games_dir_exists": os.path.exists(games_dir),
+            "update_url": cfg.OTA_data_ZIP
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to get update status: {e}")
         raise HTTPException(status_code=500, detail=str(e))

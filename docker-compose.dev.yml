@@ -13,7 +13,7 @@ services:
       # - RGSX_API_KEY=your-dev-key-here
       # Optional: Rate limiting
       # - RGSX_RATE_LIMIT=100/min
-      # Development flag to disable automatic data updates
+      # Enable automatic data updates (platforms and game lists)
       - RGSX_DISABLE_DATA_UPDATE=false
     volumes:
       # Mount local directories for development

@@ -86,12 +86,19 @@ Or set the environment variable `ONEFICHIER_API_KEY` (the entrypoint writes it t
 - **Game List** - View games for selected platform  
 - **Search** - Global search across all games
 - **History** - View download history and status
+- **Settings** - Configure 1fichier API key and update game data
 
 ### Downloads
 - Click "Download" on any game to start
 - Monitor progress in real-time
 - Cancel active downloads
 - View completed downloads in history
+
+### Data Updates
+- **Automatic Updates** - Platform and game lists auto-update on startup if missing
+- **Manual Updates** - Use Settings → "Update Platform & Game Lists" to refresh
+- **Persistent** - Updates save to `/saves` volume and survive container rebuilds
+- **Container-Safe** - Code updates disabled (use image rebuilds instead)
 
 ### Keyboard Shortcuts
 - `Ctrl + /` - Open global search
@@ -113,6 +120,8 @@ The FastAPI backend provides a complete REST API:
 | POST | `/api/download` | Start download |
 | GET | `/api/history` | Download history |
 | GET | `/api/search` | Search games |
+| GET | `/api/update/status` | Data update status |
+| POST | `/api/update/data` | Manual data update |
 | WS | `/ws/progress` | Download progress |
 
 ## Development

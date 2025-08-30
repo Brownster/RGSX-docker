@@ -474,6 +474,7 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: var(--spacing-md);
 }
 
 .history-info {
@@ -501,6 +502,11 @@ body {
 .history-status.completed { background: var(--accent); color: #000; }
 .history-status.downloading { background: var(--primary); color: var(--text); }
 .history-status.error { background: var(--error); color: var(--text); }
+
+.history-actions {
+    display: flex;
+    gap: var(--spacing-sm);
+}
 
 /* Download Overlay */
 .download-overlay {
@@ -663,4 +669,15 @@ body {
     z-index: 1500;
     box-shadow: var(--shadow-md);
     background: rgba(50, 50, 70, 0.95);
+}
+
+/* Floating Download Selected Button */
+.floating-download-selected {
+    position: fixed;
+    bottom: var(--spacing-lg);
+    right: var(--spacing-lg);
+    z-index: 1500;
+    box-shadow: var(--shadow-md);
+    background: var(--primary);
+    border-color: var(--primary);
 }

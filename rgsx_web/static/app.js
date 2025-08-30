@@ -32,10 +32,10 @@ class RGSXApp {
             'platformGrid', 'gameGrid', 'searchResults', 'historyList',
             'platformCount', 'gameCount', 'completedCount', 'searchCount',
             'currentPlatform', 'gameSearch', 'globalSearch',
-            'backBtn', 'searchBackBtn', 'historyBackBtn', 'floatingBackBtn',
+            'backBtn', 'searchBackBtn', 'historyBackBtn', 'floatingBackBtn', 'floatingDownloadBtn',
             'searchBtn', 'historyBtn', 'settingsBtn',
             'viewGrid', 'viewList', 'clearSearch',
-            'clearHistoryBtn', 'downloadOverlay', 'activeDownloads', 'downloadSelectedBtn',
+            'clearHistoryBtn', 'downloadOverlay', 'activeDownloads',
             'modal', 'modalTitle', 'modalBody', 'modalFooter', 'modalClose'
         ];
         
@@ -45,30 +45,35 @@ class RGSXApp {
     }
 
     bindEvents() {
-        // Navigation
-        this.elements.backBtn.onclick = () => this.showPlatforms();
-        this.elements.searchBackBtn.onclick = () => this.showPlatforms();
-        this.elements.historyBackBtn.onclick = () => this.showPlatforms();
+        // Navigation (guard for missing nodes)
+        if (this.elements.backBtn) this.elements.backBtn.onclick = () => this.showPlatforms();
+        if (this.elements.searchBackBtn) this.elements.searchBackBtn.onclick = () => this.showPlatforms();
+        if (this.elements.historyBackBtn) this.elements.historyBackBtn.onclick = () => this.showPlatforms();
         if (this.elements.floatingBackBtn) {
             this.elements.floatingBackBtn.onclick = () => this.showPlatforms();
         }
+        if (this.elements.floatingDownloadBtn) {
+            this.elements.floatingDownloadBtn.onclick = () => this.handleDownloadSelectedClick();
+        }
         
         // Header actions
-        this.elements.searchBtn.onclick = () => this.showSearch();
-        this.elements.historyBtn.onclick = () => this.showHistory();
-        this.elements.settingsBtn.onclick = () => this.openSettingsModal();
+        if (this.elements.searchBtn) this.elements.searchBtn.onclick = () => this.showSearch();
+        if (this.elements.historyBtn) this.elements.historyBtn.onclick = () => this.showHistory();
+        if (this.elements.settingsBtn) this.elements.settingsBtn.onclick = () => this.openSettingsModal();
         
         // Search inputs
-        this.elements.gameSearch.oninput = (e) => this.filterGames(e.target.value);
-        this.elements.globalSearch.oninput = (e) => this.performGlobalSearch(e.target.value);
-        this.elements.clearSearch.onclick = () => this.clearGameSearch();
+        if (this.elements.gameSearch) this.elements.gameSearch.oninput = (e) => this.filterGames(e.target.value);
+        if (this.elements.globalSearch) this.elements.globalSearch.oninput = (e) => this.performGlobalSearch(e.target.value);
+        if (this.elements.clearSearch) this.elements.clearSearch.onclick = () => this.clearGameSearch();
         
         // View toggles
-        this.elements.viewGrid.onclick = () => this.setGameView('grid');
-        this.elements.viewList.onclick = () => this.setGameView('list');
+        if (this.elements.viewGrid) this.elements.viewGrid.onclick = () => this.setGameView('grid');
+        if (this.elements.viewList) this.elements.viewList.onclick = () => this.setGameView('list');
         
         // History actions
-        this.elements.clearHistoryBtn.onclick = () => this.confirmClearHistory();
+        if (this.elements.clearHistoryBtn) this.elements.clearHistoryBtn.onclick = () => this.confirmClearHistory();
+        
+        // Download selected - use querySelector since it's not cached
         const bulkBtn = document.getElementById('download-selected-btn');
         if (bulkBtn) bulkBtn.onclick = () => this.handleDownloadSelectedClick();
         
@@ -76,13 +81,10 @@ class RGSXApp {
         document.querySelectorAll('.filter-btn').forEach(btn => {
             btn.onclick = () => this.filterHistory(btn.dataset.status);
         });
-
-        // Download selected
-        this.elements.downloadSelectedBtn.onclick = () => this.handleDownloadSelectedClick();
         
         // Modal
-        this.elements.modalClose.onclick = () => this.hideModal();
-        this.elements.modal.onclick = (e) => {
+        if (this.elements.modalClose) this.elements.modalClose.onclick = () => this.hideModal();
+        if (this.elements.modal) this.elements.modal.onclick = (e) => {
             if (e.target === this.elements.modal) this.hideModal();
         };
 
@@ -98,8 +100,15 @@ class RGSXApp {
             }
         });
 
-        // Scroll-based floating back button visibility
-        window.addEventListener('scroll', () => this.updateFloatingBackVisibility());
+        // Scroll-based floating button visibility
+        window.addEventListener('scroll', () => this.updateFloatingButtonVisibility());
+        
+        // Selection change handler for floating download button
+        document.addEventListener('change', (e) => {
+            if (e.target.classList.contains('game-checkbox')) {
+                this.updateFloatingButtonVisibility();
+            }
+        });
     }
 
     async loadInitialData() {
@@ -120,8 +129,14 @@ class RGSXApp {
     }
 
     async loadPlatforms() {
-        const response = await fetch(`${this.API}/platforms`);
-        this.state.platforms = await response.json();
+        try {
+            const response = await fetch(`${this.API}/platforms`);
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            this.state.platforms = await response.json();
+        } catch (err) {
+            console.error('[RGSX] failed to load platforms:', err);
+            this.state.platforms = [];
+        }
     }
 
     async loadGames(platformId) {
@@ -203,10 +218,14 @@ class RGSXApp {
     showView(viewName) {
         const views = ['loadingScreen', 'platformView', 'gameView', 'searchView', 'historyView'];
         views.forEach(view => {
-            this.elements[view].style.display = view === `${viewName}View` || view === viewName ? 'block' : 'none';
+            const element = this.elements[view];
+            const shouldShow = view === `${viewName}View` || view === viewName;
+            if (element) {
+                element.style.display = shouldShow ? 'block' : 'none';
+            }
         });
         this.state.currentView = viewName;
-        this.updateFloatingBackVisibility();
+        this.updateFloatingButtonVisibility();
     }
 
     showPlatforms() {
@@ -219,14 +238,30 @@ class RGSXApp {
         await this.loadGames(platform.id);
         this.showView('game');
         this.renderGames();
-        this.updateFloatingBackVisibility();
+        this.updateFloatingButtonVisibility();
     }
 
-    updateFloatingBackVisibility() {
-        const btn = this.elements.floatingBackBtn;
-        if (!btn) return;
-        const shouldShow = this.state.currentView === 'game' && window.scrollY > 200;
-        btn.style.display = shouldShow ? 'inline-flex' : 'none';
+    updateFloatingButtonVisibility() {
+        // Floating back button
+        const backBtn = this.elements.floatingBackBtn;
+        if (backBtn) {
+            const shouldShowBack = this.state.currentView === 'game' && window.scrollY > 200;
+            backBtn.style.display = shouldShowBack ? 'inline-flex' : 'none';
+        }
+
+        // Floating download selected button
+        const downloadBtn = this.elements.floatingDownloadBtn;
+        if (downloadBtn) {
+            const selectedCount = document.querySelectorAll('.game-checkbox:checked').length;
+            const shouldShowDownload = this.state.currentView === 'game' && window.scrollY > 200 && selectedCount > 0;
+            downloadBtn.style.display = shouldShowDownload ? 'inline-flex' : 'none';
+            
+            // Update text with count
+            const span = downloadBtn.querySelector('span');
+            if (span && selectedCount > 0) {
+                span.textContent = `⬇ (${selectedCount})`;
+            }
+        }
     }
 
     showSearch() {
@@ -243,13 +278,35 @@ class RGSXApp {
 
     // Rendering methods
     renderPlatforms() {
-        this.elements.platformCount.textContent = `${this.state.platforms.length} platforms`;
+        const count = Array.isArray(this.state.platforms) ? this.state.platforms.length : 0;
+        
+        if (this.elements.platformCount) this.elements.platformCount.textContent = `${count} platforms`;
+        if (!this.elements.platformGrid) return;
         this.elements.platformGrid.innerHTML = '';
 
-        this.state.platforms.forEach(platform => {
-            const card = this.createPlatformCard(platform);
-            this.elements.platformGrid.appendChild(card);
-        });
+        if (!count) {
+            const msg = document.createElement('div');
+            msg.className = 'text-muted';
+            msg.style.padding = '1rem';
+            msg.textContent = 'No platforms found. Try reloading.';
+            const btn = document.createElement('button');
+            btn.className = 'btn btn-primary';
+            btn.style.marginTop = '0.5rem';
+            btn.textContent = 'Reload';
+            btn.onclick = async () => { await this.loadPlatforms(); this.renderPlatforms(); };
+            this.elements.platformGrid.appendChild(msg);
+            this.elements.platformGrid.appendChild(btn);
+            return;
+        }
+
+        for (const platform of this.state.platforms) {
+            try {
+                const card = this.createPlatformCard(platform);
+                this.elements.platformGrid.appendChild(card);
+            } catch (e) {
+                console.error('[RGSX] failed to render platform card:', platform, e);
+            }
+        }
     }
 
     renderGames() {
@@ -656,26 +713,53 @@ class RGSXApp {
         );
     }
 
-    // Settings: 1fichier API key
+    // Settings modal with 1fichier API key and data updates
     async openSettingsModal() {
         try {
-            const r = await fetch(`${this.API}/settings/onefichier`);
-            const st = await r.json();
-            const presentText = st.present ? `Present (${st.length} chars)` : 'Not set';
+            // Load both API key status and update status
+            const [apiResponse, updateResponse] = await Promise.all([
+                fetch(`${this.API}/settings/onefichier`),
+                fetch(`${this.API}/update/status`)
+            ]);
+            
+            const apiStatus = await apiResponse.json();
+            const updateStatus = await updateResponse.json();
+            
+            const presentText = apiStatus.present ? `Present (${apiStatus.length} chars)` : 'Not set';
+            const lastUpdated = updateStatus.last_updated 
+                ? new Date(updateStatus.last_updated).toLocaleString()
+                : 'Never';
+                
             const body = `
                 <div>
-                    <div class="mb-md">1fichier API Key</div>
-                    <input id="onefichierInput" type="password" class="search-input" placeholder="Paste your 1fichier API key" />
-                    <div class="text-muted mb-md">Current: ${presentText}</div>
+                    <div class="mb-md">
+                        <h4>1fichier API Key</h4>
+                        <input id="onefichierInput" type="password" class="search-input" placeholder="Paste your 1fichier API key" />
+                        <div class="text-muted mb-md">Current: ${presentText}</div>
+                    </div>
+                    
+                    <div class="mb-md">
+                        <h4>Game Data Updates</h4>
+                        <div class="text-muted mb-sm">
+                            Platforms: ${updateStatus.platforms} | Games: ${updateStatus.games}<br>
+                            Last updated: ${lastUpdated}
+                        </div>
+                        <button id="updateDataBtn" class="btn btn-primary mb-sm">Update Platform & Game Lists</button>
+                        <div class="text-muted">Downloads latest platform definitions and game catalogs from RetroGameSets.</div>
+                    </div>
                 </div>
             `;
             const footer = `
                 <button id="cancelSettingsBtn" class="btn btn-secondary">Cancel</button>
-                <button id="saveOnefichierBtn" class="btn btn-primary">Save</button>
+                <button id="saveOnefichierBtn" class="btn btn-primary">Save API Key</button>
             `;
+            
             this.showModal('Settings', body, footer);
+            
             document.getElementById('cancelSettingsBtn').onclick = () => this.hideModal();
             document.getElementById('saveOnefichierBtn').onclick = () => this.saveOnefichierKey();
+            document.getElementById('updateDataBtn').onclick = () => this.updateGameData();
+            
         } catch (e) {
             console.error('Failed to open settings:', e);
             this.showError('Failed to load settings');
@@ -700,6 +784,54 @@ class RGSXApp {
         } catch (e) {
             console.error('Failed to save key:', e);
             this.showError('Failed to save API key');
+        }
+    }
+
+    async updateGameData() {
+        try {
+            // Disable button and show loading
+            const updateBtn = document.getElementById('updateDataBtn');
+            const originalText = updateBtn.textContent;
+            updateBtn.disabled = true;
+            updateBtn.textContent = 'Updating...';
+
+            const response = await fetch(`${this.API}/update/data`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
+
+            if (!response.ok) {
+                const error = await response.text();
+                throw new Error(error);
+            }
+
+            const result = await response.json();
+            
+            // Success - reload platforms and close modal
+            await this.loadPlatforms();
+            this.hideModal();
+            
+            this.showModal(
+                'Update Complete', 
+                `<p>${result.message}</p><p class="text-muted">Updated at: ${new Date(result.timestamp).toLocaleString()}</p>`,
+                '<button class="btn btn-primary" onclick="app.hideModal()">Close</button>'
+            );
+
+            // Refresh current view if showing platforms
+            if (this.state.currentView === 'platform') {
+                this.renderPlatforms();
+            }
+
+        } catch (error) {
+            console.error('Update failed:', error);
+            this.showError(`Update failed: ${error.message}`);
+        } finally {
+            // Re-enable button
+            const updateBtn = document.getElementById('updateDataBtn');
+            if (updateBtn) {
+                updateBtn.disabled = false;
+                updateBtn.textContent = 'Update Platform & Game Lists';
+            }
         }
     }
 

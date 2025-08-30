@@ -11,6 +11,8 @@ services:
       - RGSX_API_KEY=${RGSX_API_KEY:-}
       # Rate limiting for production
       - RGSX_RATE_LIMIT=${RGSX_RATE_LIMIT:-60/min}
+      # Enable data updates (platforms/games) - persists to /saves volume
+      - RGSX_DISABLE_DATA_UPDATE=false
     volumes:
       # Production volume mounts
       - ${NAS_ROMS:-./roms}:/roms
