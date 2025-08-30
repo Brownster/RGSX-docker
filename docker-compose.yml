@@ -1,0 +1,25 @@
+version: "3.8"
+
+services:
+  rgsx:
+    build: .
+    container_name: rgsx
+    # If you prefer prebuilt, replace build with image once published
+    # image: ghcr.io/<owner>/<repo>:<tag>
+    restart: unless-stopped
+    environment:
+      - TZ=UTC
+      - RGSX_MODE=web
+      - WEB_PORT=${WEB_PORT:-8080}
+      - RGSX_DISABLE_UPDATER=1
+      # Map to your user if needed (or set in Compose with `user:`)
+      # - PUID=1000
+      # - PGID=1000
+    volumes:
+      # Point these to your NAS paths
+      - /home/marc/roms:/roms
+      - /home/marc/saves:/saves
+    ports:
+      - "${WEB_PORT:-8080}:${WEB_PORT:-8080}"   # Web UI/API
+    # Optionally enforce user mapping; uncomment and set PUID/PGID
+    # user: "${PUID:-1000}:${PGID:-1000}"

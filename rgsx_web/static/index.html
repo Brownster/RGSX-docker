@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RGSX - Retro Game Sets Xtra</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" type="image/x-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎮</text></svg>">
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <h1 class="logo">
+                <span class="logo-icon">🎮</span>
+                RGSX
+                <span class="logo-subtitle">Retro Game Sets Xtra</span>
+            </h1>
+            <div class="header-actions">
+                <button id="searchBtn" class="btn btn-secondary" title="Search Games">
+                    <span>🔍</span> Search
+                </button>
+                <button id="historyBtn" class="btn btn-secondary" title="Download History">
+                    <span>📋</span> History
+                </button>
+                <button id="settingsBtn" class="btn btn-secondary" title="Settings">
+                    <span>⚙️</span> Settings
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <!-- Loading State -->
+        <div id="loadingScreen" class="loading-screen">
+            <div class="loading-spinner"></div>
+            <p>Loading RGSX...</p>
+        </div>
+
+        <!-- Platform Grid -->
+        <div id="platformView" class="view-container" style="display: none;">
+            <div class="view-header">
+                <h2>Select Platform</h2>
+                <div class="platform-stats">
+                    <span id="platformCount">0 platforms</span>
+                </div>
+            </div>
+            <div id="platformGrid" class="platform-grid"></div>
+        </div>
+
+        <!-- Game List -->
+        <div id="gameView" class="view-container" style="display: none;">
+            <div class="view-header">
+                <button id="backBtn" class="btn btn-secondary">
+                    <span>←</span> Back to Platforms
+                </button>
+                <div class="breadcrumb">
+                    <span id="currentPlatform">Platform</span>
+                </div>
+                <div class="game-stats">
+                    <span id="gameCount">0 games</span>
+                    <span id="completedCount">0 completed</span>
+                </div>
+            </div>
+            <div class="game-controls">
+                <div class="search-container">
+                    <input type="text" id="gameSearch" placeholder="Search games..." class="search-input">
+                    <button id="clearSearch" class="btn btn-icon" title="Clear search">×</button>
+                </div>
+                <div class="view-options">
+                    <button id="viewGrid" class="btn btn-icon active" title="Grid view">⊞</button>
+                    <button id="viewList" class="btn btn-icon" title="List view">☰</button>
+                </div>
+            </div>
+            <div id="gameGrid" class="game-grid"></div>
+        </div>
+
+        <!-- Search Results -->
+        <div id="searchView" class="view-container" style="display: none;">
+            <div class="view-header">
+                <button id="searchBackBtn" class="btn btn-secondary">
+                    <span>←</span> Back
+                </button>
+                <h2>Search Results</h2>
+                <div class="search-stats">
+                    <span id="searchCount">0 results</span>
+                </div>
+            </div>
+            <div class="search-container">
+                <input type="text" id="globalSearch" placeholder="Search all games..." class="search-input">
+            </div>
+            <div id="searchResults" class="game-grid"></div>
+        </div>
+
+        <!-- History View -->
+        <div id="historyView" class="view-container" style="display: none;">
+            <div class="view-header">
+                <button id="historyBackBtn" class="btn btn-secondary">
+                    <span>←</span> Back
+                </button>
+                <h2>Download History</h2>
+                <div class="history-actions">
+                    <button id="clearHistoryBtn" class="btn btn-danger">Clear History</button>
+                </div>
+            </div>
+            <div class="history-filters">
+                <button class="filter-btn active" data-status="all">All</button>
+                <button class="filter-btn" data-status="completed">Completed</button>
+                <button class="filter-btn" data-status="downloading">Downloading</button>
+                <button class="filter-btn" data-status="error">Failed</button>
+            </div>
+            <div id="historyList" class="history-list"></div>
+        </div>
+    </main>
+
+    <!-- Download Progress Overlay -->
+    <div id="downloadOverlay" class="download-overlay" style="display: none;">
+        <div class="download-panel">
+            <h3>Active Downloads</h3>
+            <div id="activeDownloads" class="active-downloads"></div>
+        </div>
+    </div>
+
+    <!-- Floating Back Button (visible when scrolled in Games view) -->
+    <button id="floatingBackBtn" class="btn btn-secondary floating-back" style="display:none;">
+        <span>←</span> Back to Platforms
+    </button>
+
+    <!-- Modals -->
+    <div id="modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Modal</h3>
+                <button id="modalClose" class="btn btn-icon">×</button>
+            </div>
+            <div id="modalBody" class="modal-body"></div>
+            <div id="modalFooter" class="modal-footer"></div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

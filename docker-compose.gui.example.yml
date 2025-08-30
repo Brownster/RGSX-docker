@@ -1,0 +1,19 @@
+services:
+  rgsx-gui:
+    build: .
+    container_name: rgsx-gui
+    restart: unless-stopped
+    environment:
+      - TZ=UTC
+      - RGSX_MODE=gui
+      - DISPLAY_WIDTH=1600
+      - DISPLAY_HEIGHT=900
+      - SDL_VIDEODRIVER=x11
+      - SDL_AUDIODRIVER=dummy
+      - RGSX_DISABLE_UPDATER=1
+    volumes:
+      - ${NAS_ROMS}:/roms
+      - ${RGSX_SAVES}:/saves
+    ports:
+      - "5900:5900"   # VNC access
+      - "6080:6080"   # noVNC (browser)

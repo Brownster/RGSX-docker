@@ -1,0 +1,11 @@
+{
+  "language": "en",
+  "music_enabled": true,
+  "accessibility": {
+    "font_scale": 1.0
+  },
+  "symlink": {
+    "enabled": false,
+    "target_directory": ""
+  }
+}

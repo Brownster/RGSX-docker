@@ -1,0 +1,33 @@
+services:
+  rgsx-web-dev:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: rgsx-web-dev
+    restart: unless-stopped
+    environment:
+      - TZ=UTC
+      - RGSX_MODE=web
+      - WEB_PORT=8080
+      # Optional: Enable API authentication in dev
+      # - RGSX_API_KEY=your-dev-key-here
+      # Optional: Rate limiting
+      # - RGSX_RATE_LIMIT=100/min
+      # Development flag to disable automatic data updates
+      - RGSX_DISABLE_DATA_UPDATE=false
+    volumes:
+      # Mount local directories for development
+      - ./roms:/roms
+      - ./saves:/saves
+      # Hot reload for web UI development
+      - ./rgsx_web/static:/opt/rgsx_web/static
+      # Optional: Mount source code for Python development
+      # - ./ports/RGSX:/opt/RGSX
+    ports:
+      - "8080:8080"  # FastAPI Web UI
+    networks:
+      - rgsx-dev
+
+networks:
+  rgsx-dev:
+    driver: bridge

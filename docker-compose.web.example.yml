@@ -1,0 +1,16 @@
+version: "3.8"
+
+services:
+  rgsx-web:
+    build: .
+    container_name: rgsx-web
+    restart: unless-stopped
+    environment:
+      - TZ=UTC
+      - RGSX_MODE=web
+    volumes:
+      - ${NAS_ROMS}:/roms
+      - ${RGSX_SAVES}:/saves
+    ports:
+      - "8080:8080"  # FastAPI
+

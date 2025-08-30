@@ -1,0 +1,58 @@
+[
+  {
+    "platform": "Nintendo Entertainment System",
+    "game_name": "'89 Dennou Kyuusei Uranai (Japan).zip",
+    "status": "downloading",
+    "url": "https://myrient.erista.me/files/No-Intro/Nintendo%20-%20Nintendo%20Entertainment%20System%20%28Headered%29/%2789%20Dennou%20Kyuusei%20Uranai%20%28Japan%29.zip",
+    "progress": 0,
+    "timestamp": "2025-08-29 20:53:42"
+  },
+  {
+    "platform": "Nintendo Entertainment System",
+    "game_name": "110-in-1 (Asia) (En) (Pirate).zip",
+    "status": "downloading",
+    "url": "https://myrient.erista.me/files/No-Intro/Nintendo%20-%20Nintendo%20Entertainment%20System%20%28Headered%29/110-in-1%20%28Asia%29%20%28En%29%20%28Pirate%29.zip",
+    "progress": 0,
+    "timestamp": "2025-08-29 20:55:53"
+  },
+  {
+    "platform": "Nintendo Game Boy Advance",
+    "game_name": "007 - Everything or Nothing (USA, Europe) (En,Fr,De).zip",
+    "status": "downloading",
+    "url": "https://myrient.erista.me/files/No-Intro/Nintendo%20-%20Game%20Boy%20Advance/007%20-%20Everything%20or%20Nothing%20%28USA%2C%20Europe%29%20%28En%2CFr%2CDe%29.zip",
+    "progress": 0,
+    "timestamp": "2025-08-29 20:56:15"
+  },
+  {
+    "platform": "Super Nintendo Entertainment System",
+    "game_name": "Addams Family, The (Europe) (En,Fr,De).zip",
+    "status": "downloading",
+    "url": "https://myrient.erista.me/files/No-Intro/Nintendo%20-%20Super%20Nintendo%20Entertainment%20System/Addams%20Family%2C%20The%20%28Europe%29%20%28En%2CFr%2CDe%29.zip",
+    "progress": 0,
+    "timestamp": "2025-08-29 21:07:48"
+  },
+  {
+    "platform": "Nintendo Game Boy Advance",
+    "game_name": "Babar to the Rescue (USA) (En,Fr,Es).zip",
+    "status": "Download_OK",
+    "url": "https://myrient.erista.me/files/No-Intro/Nintendo%20-%20Game%20Boy%20Advance/Babar%20to%20the%20Rescue%20%28USA%29%20%28En%2CFr%2CEs%29.zip",
+    "progress": 100,
+    "timestamp": "2025-08-29 21:41:52",
+    "total_size": 2078462,
+    "downloaded_size": 1523712,
+    "speed": 9.932742302452802,
+    "message": "Extracted: Babar to the Rescue (USA) (En,Fr,Es).zip"
+  },
+  {
+    "platform": "Commodore Amiga CD32",
+    "game_name": "Banshee (Europe) (En,Fr,De,Da).zip",
+    "status": "Download_OK",
+    "url": "https://myrient.erista.me/files/Redump/Commodore%20-%20Amiga%20CD32/Banshee%20%28Europe%29%20%28En%2CFr%2CDe%2CDa%29.zip",
+    "progress": 100,
+    "timestamp": "2025-08-29 22:10:53",
+    "total_size": 50409799,
+    "downloaded_size": 49532928,
+    "speed": 11.131098106056092,
+    "message": "Extracted: Banshee (Europe) (En,Fr,De,Da).zip"
+  }
+]
