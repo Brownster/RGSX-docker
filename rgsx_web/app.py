@@ -273,8 +273,7 @@ class DownloadRequest(BaseModel):
     is_archive: Optional[bool] = None
 
 
-@app.post("/api/download", dependencies=[Depends(dep_auth), Depends(dep_rate_limit)])
-async def start_download(req: DownloadRequest):
+async def _enqueue_download(platform: str, game_name: str, url: str, is_archive: bool | None):
     ensure_data()
     # Initialize sources once to set cfg.platform_dicts for path mapping
     load_sources()
@@ -283,7 +282,7 @@ async def start_download(req: DownloadRequest):
     task_id = str(asyncio.get_event_loop().time()).replace(".", "")
 
     # Append to history immediately
-    hist_entry = add_to_history(req.platform, req.game_name, "downloading", url=req.url, progress=0)
+    hist_entry = add_to_history(platform, game_name, "downloading", url=url, progress=0)
     # Keep in-memory history in sync so network.py can update it
     try:
         cfg.history = load_history()
@@ -291,16 +290,21 @@ async def start_download(req: DownloadRequest):
         pass
 
     # Decide path based on URL type
-    if network.is_1fichier_url(req.url):
+    if network.is_1fichier_url(url):
         task = asyncio.create_task(
-            network.download_from_1fichier(req.url, req.platform, req.game_name, bool(req.is_archive), task_id)
+            network.download_from_1fichier(url, platform, game_name, bool(is_archive), task_id)
         )
     else:
         task = asyncio.create_task(
-            network.download_rom(req.url, req.platform, req.game_name, bool(req.is_archive), task_id)
+            network.download_rom(url, platform, game_name, bool(is_archive), task_id)
         )
 
     return {"task_id": task_id, "history": hist_entry}
+
+
+@app.post("/api/download", dependencies=[Depends(dep_auth), Depends(dep_rate_limit)])
+async def start_download(req: DownloadRequest):
+    return await _enqueue_download(req.platform, req.game_name, req.url, req.is_archive)
 
 
 class BatchDownloadRequest(BaseModel):
@@ -564,6 +568,64 @@ def search(q: str, platform_id: Optional[str] = None, limit: int = 100):
                         break
 
     return results[:limit] if limit and limit > 0 else results
+
+
+# Redownload a history entry
+class RedownloadRequest(BaseModel):
+    url: Optional[str] = None
+    platform: Optional[str] = None
+    game_name: Optional[str] = None
+    is_archive: Optional[bool] = None
+
+
+@app.post("/api/history/redownload", dependencies=[Depends(dep_auth), Depends(dep_rate_limit)])
+async def redownload(req: RedownloadRequest):
+    hist = load_history() or []
+    # Prefer exact URL match if provided
+    entry = None
+    if req.url:
+        for e in reversed(hist):
+            if e.get("url") == req.url:
+                entry = e
+                break
+    if not entry:
+        # Try platform + name
+        for e in reversed(hist):
+            if req.platform and req.game_name and e.get("platform") == req.platform and (e.get("game_name") or e.get("name")) == req.game_name:
+                entry = e
+                break
+    if not entry:
+        raise HTTPException(status_code=404, detail="history entry not found")
+
+    platform = entry.get("platform") or req.platform
+    game_name = entry.get("game_name") or entry.get("name") or req.game_name
+    url = entry.get("url") or req.url
+    if not (platform and game_name and url):
+        raise HTTPException(status_code=400, detail="insufficient data to redownload")
+    return await _enqueue_download(platform, game_name, url, req.is_archive)
+
+
+# Batch download
+class BatchItem(BaseModel):
+    platform: str
+    game_name: str
+    url: str
+    is_archive: Optional[bool] = None
+
+
+class BatchRequest(BaseModel):
+    items: list[BatchItem]
+
+
+@app.post("/api/download/batch", dependencies=[Depends(dep_auth), Depends(dep_rate_limit)])
+async def start_batch(req: BatchRequest):
+    if not req.items:
+        raise HTTPException(status_code=400, detail="no items")
+    tasks = []
+    for it in req.items:
+        tasks.append(asyncio.create_task(_enqueue_download(it.platform, it.game_name, it.url, it.is_archive)))
+    results = await asyncio.gather(*tasks)
+    return {"ok": True, "count": len(results), "tasks": results}
 
 
 # Settings: 1fichier API key management

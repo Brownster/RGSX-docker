@@ -69,6 +69,8 @@ class RGSXApp {
         
         // History actions
         this.elements.clearHistoryBtn.onclick = () => this.confirmClearHistory();
+        const bulkBtn = document.getElementById('download-selected-btn');
+        if (bulkBtn) bulkBtn.onclick = () => this.handleDownloadSelectedClick();
         
         // History filters
         document.querySelectorAll('.filter-btn').forEach(btn => {
@@ -465,6 +467,8 @@ class RGSXApp {
         
         this.websockets.set(url, ws);
         this.state.activeDownloads.set(url, { name: gameName, progress: 0, status: 'downloading' });
+        const badge = document.getElementById('activeCountBadge');
+        if (badge) { badge.style.display = 'inline-flex'; badge.textContent = String(this.state.activeDownloads.size); }
 
         ws.onmessage = (event) => {
             const data = JSON.parse(event.data);
@@ -475,6 +479,12 @@ class RGSXApp {
             this.websockets.delete(url);
             this.state.activeDownloads.delete(url);
             this.updateDownloadOverlay();
+            const badge = document.getElementById('activeCountBadge');
+            if (badge) {
+                const n = this.state.activeDownloads.size;
+                badge.style.display = n > 0 ? 'inline-flex' : 'none';
+                if (n > 0) badge.textContent = String(n);
+            }
         };
 
         ws.onerror = (error) => {
@@ -508,6 +518,12 @@ class RGSXApp {
             const ws = this.websockets.get(url);
             if (ws) try { ws.close(); } catch (_) {}
             this.updateDownloadOverlay();
+            const badge = document.getElementById('activeCountBadge');
+            if (badge) {
+                const n = this.state.activeDownloads.size;
+                badge.style.display = n > 0 ? 'inline-flex' : 'none';
+                if (n > 0) badge.textContent = String(n);
+            }
         }
     }
 
@@ -565,10 +581,10 @@ class RGSXApp {
 
         if (downloads.length > 0) {
             try {
-                const response = await fetch(`${this.API}/downloads/batch`, {
+                const response = await fetch(`${this.API}/download/batch`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ downloads: downloads })
+                    body: JSON.stringify({ items: downloads })
                 });
 
                 if (!response.ok) {
@@ -577,8 +593,9 @@ class RGSXApp {
                 }
 
                 const data = await response.json();
-                data.tasks.forEach(task => {
-                    this.startProgressMonitoring(task.history.url, task.history.game_name);
+                (data.tasks || []).forEach(task => {
+                    const h = task.history || {};
+                    if (h.url && h.game_name) this.startProgressMonitoring(h.url, h.game_name);
                 });
                 this.showDownloadOverlay();
 
