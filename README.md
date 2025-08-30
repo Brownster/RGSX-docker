@@ -70,7 +70,8 @@ You will find RGSX in the "PORTS" system or "Homebrew and ports" and in `/roms/p
 
 This project includes support for running RGSX in a Docker container. This is useful for users who want to run the application in an isolated environment, or who want to host the web UI on a server.
 
-<img width="1920" height="1080" alt="Screenshot_20250830_160127" src="https://github.com/user-attachments/assets/024cbb04-8964-4b0c-b7f9-cc91f04f1a0a" />
+
+<img width="1566" height="813" alt="Screenshot_20250830_160810" src="https://github.com/user-attachments/assets/29e609d3-758e-4171-bd00-0891b7e0b22b" />
 
 
 ### Building the Docker Image
