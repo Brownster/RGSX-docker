@@ -12,7 +12,7 @@ permissions:
   packages: write
 
 env:
-  # GHCR target (defaults to ghcr.io/<owner>/<repo>)
+  # GHCR target (defaults to ghcr.io/<owner>/<repo>) - convert to lowercase
   GHCR_IMAGE: ghcr.io/${{ github.repository }}
   # Optional Docker Hub repository (e.g., myuser/rgsx). Set via repo variable or secret.
   DOCKERHUB_IMAGE: ${{ vars.DOCKERHUB_IMAGE || secrets.DOCKERHUB_IMAGE }}
@@ -83,11 +83,14 @@ jobs:
         id: vars
         run: |
           REF_NAME="${GITHUB_REF_NAME}"
+          # Convert repository name to lowercase for Docker compatibility
+          GHCR_IMAGE_LOWER=$(echo "${GHCR_IMAGE}" | tr '[:upper:]' '[:lower:]')
+          DOCKERHUB_IMAGE_LOWER=$(echo "${DOCKERHUB_IMAGE}" | tr '[:upper:]' '[:lower:]')
+          
           echo "version=${REF_NAME}" >> $GITHUB_OUTPUT
-          # Example outputs:
-          echo "ghcr_tags=${GHCR_IMAGE}:${REF_NAME},${GHCR_IMAGE}:latest" >> $GITHUB_OUTPUT
+          echo "ghcr_tags=${GHCR_IMAGE_LOWER}:${REF_NAME},${GHCR_IMAGE_LOWER}:latest" >> $GITHUB_OUTPUT
           if [ -n "${DOCKERHUB_IMAGE}" ]; then
-            echo "dh_tags=${DOCKERHUB_IMAGE}:${REF_NAME},${DOCKERHUB_IMAGE}:latest" >> $GITHUB_OUTPUT
+            echo "dh_tags=${DOCKERHUB_IMAGE_LOWER}:${REF_NAME},${DOCKERHUB_IMAGE_LOWER}:latest" >> $GITHUB_OUTPUT
           fi
 
       - name: Build and push (GHCR)
