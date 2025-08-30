@@ -303,6 +303,22 @@ async def start_download(req: DownloadRequest):
     return {"task_id": task_id, "history": hist_entry}
 
 
+class BatchDownloadRequest(BaseModel):
+    downloads: list[DownloadRequest]
+
+@app.post("/api/downloads/batch", dependencies=[Depends(dep_auth), Depends(dep_rate_limit)])
+async def start_batch_download(req: BatchDownloadRequest):
+    ensure_data()
+    load_sources()
+
+    tasks = []
+    for download_req in req.downloads:
+        task = await start_download(download_req)
+        tasks.append(task)
+    
+    return {"tasks": tasks}
+
+
 class CancelRequest(BaseModel):
     task_id: Optional[str] = None
     url: Optional[str] = None
@@ -314,6 +330,41 @@ def cancel_download(req: CancelRequest):
         raise HTTPException(400, "task_id or url is required")
     network.request_cancel(task_id=req.task_id, url=req.url)
     return {"ok": True}
+
+
+class RedownloadRequest(BaseModel):
+    url: str
+
+@app.post("/api/history/redownload", dependencies=[Depends(dep_auth), Depends(dep_rate_limit)])
+async def redownload_from_history(req: RedownloadRequest):
+    ensure_data()
+    hist = load_history() or []
+    
+    history_entry = None
+    for entry in reversed(hist):
+        if entry.get("url") == req.url:
+            history_entry = entry
+            break
+            
+    if not history_entry:
+        raise HTTPException(404, f"History entry not found for url {req.url}")
+
+    platform = history_entry.get("platform")
+    game_name = history_entry.get("game_name") or history_entry.get("name")
+    
+    if not platform or not game_name:
+        raise HTTPException(400, "History entry is missing platform or game_name")
+
+    is_archive = history_entry.get("is_archive", False)
+
+    download_req = DownloadRequest(
+        platform=platform,
+        game_name=game_name,
+        url=req.url,
+        is_archive=is_archive
+    )
+    
+    return await start_download(download_req)
 
 
 @app.get("/api/progress", dependencies=[Depends(dep_auth), Depends(dep_rate_limit)])

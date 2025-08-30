@@ -35,7 +35,7 @@ class RGSXApp {
             'backBtn', 'searchBackBtn', 'historyBackBtn', 'floatingBackBtn',
             'searchBtn', 'historyBtn', 'settingsBtn',
             'viewGrid', 'viewList', 'clearSearch',
-            'clearHistoryBtn', 'downloadOverlay', 'activeDownloads',
+            'clearHistoryBtn', 'downloadOverlay', 'activeDownloads', 'downloadSelectedBtn',
             'modal', 'modalTitle', 'modalBody', 'modalFooter', 'modalClose'
         ];
         
@@ -74,6 +74,9 @@ class RGSXApp {
         document.querySelectorAll('.filter-btn').forEach(btn => {
             btn.onclick = () => this.filterHistory(btn.dataset.status);
         });
+
+        // Download selected
+        this.elements.downloadSelectedBtn.onclick = () => this.handleDownloadSelectedClick();
         
         // Modal
         this.elements.modalClose.onclick = () => this.hideModal();
@@ -348,6 +351,14 @@ class RGSXApp {
         const actions = document.createElement('div');
         actions.className = 'game-actions';
 
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.className = 'game-checkbox';
+        checkbox.dataset.url = game.url;
+        checkbox.dataset.name = game.name;
+        checkbox.dataset.platform = showPlatform ? (game.platform || '') : (this.state.currentPlatform?.id || '');
+        actions.appendChild(checkbox);
+
         const dlBtn = document.createElement('button');
         dlBtn.className = `btn ${isCompleted ? 'btn-success' : 'btn-primary'}`;
         dlBtn.disabled = !!isCompleted;
@@ -400,7 +411,18 @@ class RGSXApp {
             <div class="history-status ${this.normalizeStatus(item.status)}">
                 ${this.normalizeStatus(item.status)}
             </div>
+            <div class="history-actions">
+                <button class="btn btn-sm btn-primary redownload-btn" data-url="${item.url}">Download Again</button>
+            </div>
         `;
+
+        const redownloadBtn = historyItem.querySelector('.redownload-btn');
+        if (redownloadBtn) {
+            redownloadBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.redownload(item.url);
+            });
+        }
 
         return historyItem;
     }
@@ -503,6 +525,67 @@ class RGSXApp {
         } catch (error) {
             console.error('Cancel failed:', error);
             this.showError('Failed to cancel download');
+        }
+    }
+
+    async redownload(url) {
+        try {
+            const response = await fetch(`${this.API}/history/redownload`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url })
+            });
+
+            if (!response.ok) {
+                const error = await response.text();
+                throw new Error(error);
+            }
+
+            const data = await response.json();
+            this.startProgressMonitoring(data.history.url, data.history.game_name);
+            this.showDownloadOverlay();
+
+        } catch (error) {
+            console.error('Redownload failed:', error);
+            this.showError(`Redownload failed: ${error.message}`);
+        }
+    }
+
+    async handleDownloadSelectedClick() {
+        const checkboxes = document.querySelectorAll('.game-checkbox:checked');
+        const downloads = [];
+        checkboxes.forEach(checkbox => {
+            downloads.push({
+                platform: checkbox.dataset.platform,
+                game_name: checkbox.dataset.name,
+                url: checkbox.dataset.url,
+                is_archive: /\.(zip|rar)$/i.test(checkbox.dataset.url)
+            });
+        });
+
+        if (downloads.length > 0) {
+            try {
+                const response = await fetch(`${this.API}/downloads/batch`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ downloads: downloads })
+                });
+
+                if (!response.ok) {
+                    const error = await response.text();
+                    throw new Error(error);
+                }
+
+                const data = await response.json();
+                data.tasks.forEach(task => {
+                    this.startProgressMonitoring(task.history.url, task.history.game_name);
+                });
+                this.showDownloadOverlay();
+
+            } catch (error) {
+                console.error('Batch download failed:', error);
+                this.showError(`Batch download failed: ${error.message}`);
+            }
         }
     }
 

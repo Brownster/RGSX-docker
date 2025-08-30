@@ -470,9 +470,10 @@ async def download_rom(url, platform, game_name, is_zip_non_supported=False, tas
                                     entry["status"] = "Téléchargement"
                                     entry["downloaded_size"] = downloaded
                                     entry["total_size"] = total_size
-                                    entry["speed"] = speed  # Ajout de la vitesse
+                                    entry["speed"] = speed
                                     config.needs_redraw = True
-                                    break           
+                                    break
+                            save_history(config.history)           
             await asyncio.sleep(0.1)
         except Exception as e:
             logger.error(f"Erreur mise à jour progression: {str(e)}")
@@ -517,6 +518,7 @@ async def download_rom(url, platform, game_name, is_zip_non_supported=False, tas
                                 entry["speed"] = speed
                                 config.needs_redraw = True
                                 break
+                        save_history(config.history)
     except Exception as e:
         logger.error(f"Erreur lors du drainage de la file de progression: {str(e)}")
     # Nettoyer la queue
@@ -798,6 +800,7 @@ async def download_from_1fichier(url, platform, game_name, is_zip_non_supported=
                                     entry["total_size"] = total_size
                                     config.needs_redraw = True
                                     break
+                            save_history(config.history)
             await asyncio.sleep(0.1)
         except Exception as e:
             logger.error(f"Erreur mise à jour progression: {str(e)}")
@@ -838,6 +841,7 @@ async def download_from_1fichier(url, platform, game_name, is_zip_non_supported=
                                 entry["total_size"] = total_size
                                 config.needs_redraw = True
                                 break
+                        save_history(config.history)
     except Exception as e:
         logger.error(f"Erreur drainage file progression 1fichier: {str(e)}")
     logger.debug(f"Thread terminé, nettoyage queue pour task_id={task_id}")
