@@ -12,8 +12,9 @@ RUN apt-get update \
        xvfb x11vnc fluxbox websockify novnc \
     && rm -rf /var/lib/apt/lists/*
 
-# Python requirements (web)
-RUN pip install --no-cache-dir requests fastapi uvicorn[standard]
+# Python requirements (web): avoid uvicorn[standard] to skip uvloop/httptools builds on arm/v7
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel \
+    && pip install --no-cache-dir requests fastapi uvicorn websockets
 
 # Optional: install pygame and SDL libs for GUI builds
 RUN if [ "$INCLUDE_PYGAME" = "1" ]; then \
