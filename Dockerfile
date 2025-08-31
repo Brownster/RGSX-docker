@@ -1,17 +1,31 @@
 FROM python:3.11-slim-bookworm
 
-# Install runtime deps: SDL libraries for pygame, VNC/X virtual display, and tools used by the app
+# Build arg to optionally include GUI deps (pygame). Default off for web-only images
+ARG INCLUDE_PYGAME=0
+
+# Install runtime deps: minimal for web mode; GUI deps added conditionally
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
-       xvfb x11vnc fluxbox websockify novnc \
        iputils-ping curl \
        unrar-free \
-       libsdl2-2.0-0 libsdl2-image-2.0-0 libsdl2-mixer-2.0-0 libsdl2-ttf-2.0-0 \
-       libjpeg62-turbo libpng16-16 libfreetype6 libgl1 libglu1-mesa \
+       # GUI/VNC tools only when running GUI mode; harmless to have present, but skip heavy SDL libs here\
+       xvfb x11vnc fluxbox websockify novnc \
     && rm -rf /var/lib/apt/lists/*
 
-# Python requirements
-RUN pip install --no-cache-dir pygame==2.5.2 requests fastapi uvicorn[standard]
+# Python requirements (web)
+RUN pip install --no-cache-dir requests fastapi uvicorn[standard]
+
+# Optional: install pygame and SDL libs for GUI builds
+RUN if [ "$INCLUDE_PYGAME" = "1" ]; then \
+      set -eux; \
+      apt-get update; \
+      apt-get install -y --no-install-recommends \
+        python3-dev build-essential \
+        libsdl2-2.0-0 libsdl2-image-2.0-0 libsdl2-mixer-2.0-0 libsdl2-ttf-2.0-0 \
+        libjpeg62-turbo libpng16-16 libfreetype6 libgl1 libglu1-mesa; \
+      pip install --no-cache-dir pygame==2.5.2; \
+      rm -rf /var/lib/apt/lists/*; \
+    fi
 
 # App location and data mount points
 WORKDIR /opt

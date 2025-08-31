@@ -15,3 +15,5 @@ ports/RGSX.bat
 \# Secrets / runtime data
 saves/ports/rgsx/1fichierAPI.txt
 saves/ports/rgsx/1FichierAPI.txt
+rgsx_web/__pycache__/
+roms/fbneo/

@@ -2,10 +2,14 @@
   {
     "platform": "Nintendo Entertainment System",
     "game_name": "'89 Dennou Kyuusei Uranai (Japan).zip",
-    "status": "downloading",
+    "status": "Download_OK",
     "url": "https://myrient.erista.me/files/No-Intro/Nintendo%20-%20Nintendo%20Entertainment%20System%20%28Headered%29/%2789%20Dennou%20Kyuusei%20Uranai%20%28Japan%29.zip",
-    "progress": 0,
-    "timestamp": "2025-08-29 20:53:42"
+    "progress": 100,
+    "timestamp": "2025-08-29 20:53:42",
+    "total_size": 129656,
+    "downloaded_size": 0,
+    "speed": 0.0,
+    "message": "Download OK: '89 Dennou Kyuusei Uranai (Japan).zip"
   },
   {
     "platform": "Nintendo Entertainment System",
@@ -54,5 +58,25 @@
     "downloaded_size": 49532928,
     "speed": 11.131098106056092,
     "message": "Extracted: Banshee (Europe) (En,Fr,De,Da).zip"
+  },
+  {
+    "platform": "Nintendo Entertainment System",
+    "game_name": "'89 Dennou Kyuusei Uranai (Japan).zip",
+    "status": "downloading",
+    "url": "https://myrient.erista.me/files/No-Intro/Nintendo%20-%20Nintendo%20Entertainment%20System%20%28Headered%29/%2789%20Dennou%20Kyuusei%20Uranai%20%28Japan%29.zip",
+    "progress": 0,
+    "timestamp": "2025-08-30 21:30:29"
+  },
+  {
+    "platform": "Final Burn Neo",
+    "game_name": "bermudat.7z",
+    "status": "Download_OK",
+    "url": "https://archive.org/download/VintageArcade/Vintage%20Arcade/bermudat.7z",
+    "progress": 100,
+    "timestamp": "2025-08-30 21:32:23",
+    "total_size": 392466,
+    "downloaded_size": 294912,
+    "speed": 0.3381219297372795,
+    "message": "Download OK: bermudat.7z"
   }
 ]

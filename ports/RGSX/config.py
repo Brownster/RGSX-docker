@@ -1,4 +1,12 @@
-import pygame # type: ignore
+# Pygame is only required for the GUI build. The Web API should not fail if
+# pygame is unavailable (e.g., slim web-only Docker images).
+try:
+    import pygame  # type: ignore
+except Exception:  # pragma: no cover - safe fallback in web mode
+    class _PygameStub:
+        def __getattr__(self, _):
+            return None
+    pygame = _PygameStub()  # type: ignore
 import os
 import logging
 import platform
@@ -192,7 +200,10 @@ is_non_pc = True  # Indicateur pour plateforme non-PC (par exemple, console)
 redownload_confirm_selection = 0  # Sélection pour la confirmation de redownload
 popup_message = ""  # Message à afficher dans les popups
 popup_timer = 0  # Temps restant pour le popup en millisecondes (0 = inactif)
-last_frame_time = pygame.time.get_ticks()
+try:
+    last_frame_time = pygame.time.get_ticks() if hasattr(pygame, 'time') and hasattr(pygame.time, 'get_ticks') else 0
+except Exception:
+    last_frame_time = 0
 current_music_name = None
 music_popup_start_time = 0
 selected_games = set()  # Indices des jeux sélectionnés pour un téléchargement multiple (menu game)
